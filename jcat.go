@@ -53,7 +53,7 @@ func getSubJson(json map[string]interface{}, key []string) map[string]interface{
 		if reflect.TypeOf(json[key[0]]) != reflect.TypeOf(json) {
 			var newJson = make(map[string]interface{})
 			newJson[key[0]] = json[key[0]]
-			return json
+			return newJson
 		}
 
 		return json[key[0]].(map[string]interface{})
