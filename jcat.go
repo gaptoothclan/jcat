@@ -7,10 +7,14 @@ import (
 	"encoding/json"
 	"strings"
 	"reflect"
+	"flag"
 )
 
 func main() {
-	args := os.Args[1:]
+	var keyFlag = flag.Bool("k", false, "Get json keys")
+	flag.Parse()
+
+	args := flag.Args()
 	if len(args) == 0 {
 		fmt.Println("Please provide a json file");
 		return
@@ -34,16 +38,31 @@ func main() {
 
 	m := c.(map[string]interface{})
 
-	if len(args) == 2 {
-		jsonFields := strings.Split(args[1], ".")
-		subJson := getSubJson(m, jsonFields)
-		byteSlice, _ := json.MarshalIndent(subJson, "", "    ")
-		fmt.Println(string(byteSlice))
+	byteSlice := getJsonByteSlice(args, m)
+
+	if *keyFlag == true {
+		var c1 interface{}
+		json.Unmarshal(byteSlice, &c1)
+		m1 := c1.(map[string]interface{})
+		for key, _ := range m1 {
+			fmt.Printf("%s\n", key)
+		}
 	} else {
-		byteSlice, _ := json.MarshalIndent(m, "", "    ")
 		fmt.Println(string(byteSlice))
 	}
+	
+}
 
+func getJsonByteSlice(args []string, jsonData map[string]interface{}) []byte {
+	if len(args) > 1 {
+		jsonFields := strings.Split(args[1], ".")
+		subJson := getSubJson(jsonData, jsonFields)
+		byteSlice, _ := json.MarshalIndent(subJson, "", "    ")
+		return byteSlice
+	} else {
+		byteSlice, _ := json.MarshalIndent(jsonData, "", "    ")
+		return byteSlice
+	}
 }
 
 func getSubJson(json map[string]interface{}, key []string) map[string]interface{} {

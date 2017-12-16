@@ -15,3 +15,5 @@ Will list the whole file
 jcat package.json scripts
 
 Will list the sub json of package.json
+
+jcat -k package.json will list all of the keys in the json
