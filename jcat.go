@@ -11,33 +11,51 @@ import (
 )
 
 func main() {
+	// Try to get a file from stdin
+	fi, err := os.Stdin.Stat()
+  if err != nil {
+    panic(err)
+	}
+	
 	var keyFlag = flag.Bool("k", false, "Get json keys")
 	flag.Parse()
 
-	args := flag.Args()
-	if len(args) == 0 {
-		fmt.Println("Please provide a json file");
-		return
-	}
-	filename := args[0]
-
-	if _, err := os.Stat(filename); err != nil {
-		fmt.Println("This is not a file");
-		return
-	}
-
-	contents, err := ioutil.ReadFile(filename)
-
-	if err != nil {
-		fmt.Println("Error reading file");
-		return
-	}
-
+	// Store json here
 	var c interface{}
-	json.Unmarshal(contents, &c)
+
+	args := flag.Args()
+
+	var fileContents []byte
+	var fileError error
+	if fi.Mode() & os.ModeNamedPipe == 0 {
+		if len(args) == 0 {
+			fmt.Println("Please provide a json file");
+			return
+		}
+
+		var filename string
+		filename, args = args[0], args[1:]
+
+		if _, fileError = os.Stat(filename); fileError != nil {
+			fmt.Println("This is not a file");
+			return
+		}
+
+		fileContents, fileError = ioutil.ReadFile(filename)
+	} else {
+		// Stdin
+		fileContents, fileError = ioutil.ReadAll(os.Stdin)
+	}
+
+	// Check json is ok
+	jerr := json.Unmarshal(fileContents, &c)
+	if jerr != nil {
+		fmt.Println("Could not process json")
+		return
+	}
 
 	m := c.(map[string]interface{})
-
+	
 	byteSlice := getJsonByteSlice(args, m)
 
 	if *keyFlag == true {
@@ -50,12 +68,12 @@ func main() {
 	} else {
 		fmt.Println(string(byteSlice))
 	}
-	
+
 }
 
 func getJsonByteSlice(args []string, jsonData map[string]interface{}) []byte {
-	if len(args) > 1 {
-		jsonFields := strings.Split(args[1], ".")
+	if len(args) > 0 {
+		jsonFields := strings.Split(args[0], ".")
 		subJson := getSubJson(jsonData, jsonFields)
 		byteSlice, _ := json.MarshalIndent(subJson, "", "    ")
 		return byteSlice
