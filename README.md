@@ -17,3 +17,7 @@ Will list the sub json of package.json
 
 ```jcat -k package.json``` 
 Will list all of the keys in the json
+
+```cat ./package.json | jcat scripts```
+
+Will attempt to read the file from stdin also works with curl
